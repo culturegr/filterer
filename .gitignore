@@ -4,3 +4,4 @@
 composer.lock
 docker-compose.yml
 docker-compose.override.yml
+.php_cs.cache

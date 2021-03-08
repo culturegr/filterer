@@ -2,7 +2,7 @@
 
 [![Packagist Version][ico-version]][link-packagist]
 [![Total Downloads][ico-downloads]][link-downloads]
-[![Codeship Status][ico-codeship]][link-codeship]
+![Github Actions](https://github.com/culturegr/filterer/actions/workflows/run-tests.yml/badge.svg)
 
 This package provides an easy way to add **filtering**, **sorting** and **paging** functionality to Eloquent models.
 
@@ -272,8 +272,6 @@ Please see the [license file](LICENSE.md) for more information.
 
 [ico-version]: https://img.shields.io/packagist/v/culturegr/filterer.svg?style=flat-square
 [ico-downloads]: https://img.shields.io/packagist/dt/culturegr/filterer.svg?style=flat-square
-[ico-codeship]: https://app.codeship.com/projects/1eb1cf10-be9f-0138-91fc-3afaac74b748/status?branch=master
 
 [link-packagist]: https://packagist.org/packages/culturegr/filterer
 [link-downloads]: https://packagist.org/packages/culturegr/filterer
-[link-codeship]: https://app.codeship.com/projects/405710
