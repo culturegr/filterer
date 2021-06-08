@@ -92,6 +92,6 @@ class FiltersBuilder
 
     protected function in(array $filter, Builder $query): Builder
     {
-        return $query->whereIn($filter['column'], explode(',', $filter['query_1']), $filter['match']);
+        return $query->whereIn($filter['column'], $filter['query_1'], $filter['match']);
     }
 }

@@ -1,6 +1,6 @@
 {
     "name": "culturegr/filterer",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "description": "Add filtering, sorting and paging functionality to Eloquent models.",
     "license": "MIT",
     "authors": [

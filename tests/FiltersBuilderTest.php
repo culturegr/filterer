@@ -67,7 +67,7 @@ class FiltersBuilderTest extends TestCase
     }
 
     /** @test */
-    public function it_filters_by_numeric_field_not_equal_to_value() : void
+    public function it_filters_by_numeric_field_not_equal_to_value(): void
     {
         $results = Client::filter([
             'filters' => [
@@ -87,7 +87,7 @@ class FiltersBuilderTest extends TestCase
     }
 
     /** @test */
-    public function it_filters_by_numeric_field_less_than_value() : void
+    public function it_filters_by_numeric_field_less_than_value(): void
     {
         $results = Client::filter([
             'filters' => [
@@ -107,7 +107,7 @@ class FiltersBuilderTest extends TestCase
     }
 
     /** @test */
-    public function it_filters_by_numeric_field_greater_than_value() : void
+    public function it_filters_by_numeric_field_greater_than_value(): void
     {
         $results = Client::filter([
             'filters' => [
@@ -127,7 +127,7 @@ class FiltersBuilderTest extends TestCase
     }
 
     /** @test */
-    public function it_filters_by_numeric_field_between_two_values() : void
+    public function it_filters_by_numeric_field_between_two_values(): void
     {
         $results = Client::filter([
             'filters' => [
@@ -147,7 +147,7 @@ class FiltersBuilderTest extends TestCase
     }
 
     /** @test */
-    public function it_filters_by_numeric_field_not_between_two_values() : void
+    public function it_filters_by_numeric_field_not_between_two_values(): void
     {
         $results = Client::filter([
             'filters' => [
@@ -194,7 +194,7 @@ class FiltersBuilderTest extends TestCase
     }
 
     /** @test */
-    public function it_filters_by_string_field_not_equal_to_value() : void
+    public function it_filters_by_string_field_not_equal_to_value(): void
     {
         $results = Client::filter([
             'filters' => [
@@ -214,7 +214,7 @@ class FiltersBuilderTest extends TestCase
     }
 
     /** @test */
-    public function it_filters_by_string_field_contains_value() : void
+    public function it_filters_by_string_field_contains_value(): void
     {
         $results = Client::filter([
             'filters' => [
@@ -295,7 +295,7 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'country.name',
                     'operator' => 'in',
-                    'query_1' => 'UK',
+                    'query_1' => ['UK'],
                     'query_2' => null,
                 ],
             ],
@@ -315,7 +315,7 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'country.name',
                     'operator' => 'in',
-                    'query_1' => 'UK,GR',
+                    'query_1' => ['UK', 'GR'],
                     'query_2' => null,
                 ],
             ],
@@ -335,7 +335,7 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'orders.shipped_at',
                     'operator' => 'in',
-                    'query_1' => '2019-08-15 09:30:00', // i.e ORDER1
+                    'query_1' => ['2019-08-15 09:30:00'], // i.e ORDER1
                     'query_2' => null,
                 ],
             ],
@@ -355,7 +355,7 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'orders.shipped_at',
                     'operator' => 'in',
-                    'query_1' => '2019-08-15 09:30:00,2019-04-15 09:30:00', // i.e ORDER1 and ORDER3
+                    'query_1' => ['2019-08-15 09:30:00', '2019-04-15 09:30:00'], // i.e ORDER1 and ORDER3
                     'query_2' => null,
                 ],
             ],
@@ -375,7 +375,7 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'favoriteProducts.price',
                     'operator' => 'in',
-                    'query_1' => '6', // i.e. Oranges
+                    'query_1' => ['6'], // i.e. Oranges
                     'query_2' => null,
                 ],
             ],
@@ -395,7 +395,7 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'favoriteProducts.price',
                     'operator' => 'in',
-                    'query_1' => '5,7', // i.e Apples and Bananas
+                    'query_1' => ['5' ,'7'], // i.e Apples and Bananas
                     'query_2' => null,
                 ],
             ],
@@ -408,20 +408,20 @@ class FiltersBuilderTest extends TestCase
     }
 
     /** @test */
-    public function it_combines_multiple_fitlers_using_the_AND_operator() :void
+    public function it_combines_multiple_fitlers_using_the_AND_operator(): void
     {
         $results = Client::filter([
             'filters' => [
                 [
                     'column' => 'favoriteProducts.price',
                     'operator' => 'in',
-                    'query_1' => '6,7',
+                    'query_1' => ['6' ,'7'],
                     'query_2' => null,
                 ],
                 [
                     'column' => 'orders.shipped_at',
                     'operator' => 'in',
-                    'query_1' => '2019-06-15 09:30:00,2019-04-15 09:30:00',
+                    'query_1' => ['2019-06-15 09:30:00' ,'2019-04-15 09:30:00'],
                     'query_2' => null,
                 ],
                 [
