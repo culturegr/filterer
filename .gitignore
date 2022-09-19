@@ -2,7 +2,5 @@
 /.idea
 .phpunit.result.cache
 composer.lock
-docker-compose.yml
-docker-compose.override.yml
 .php_cs.cache
 .php-cs-fixer.cache
