@@ -82,6 +82,11 @@ class FiltersBuilder
         return $query->where($filter['column'], 'like', '%'.$filter['query_1'].'%', $filter['match']);
     }
 
+    protected function startsWith(array $filter, Builder $query): Builder
+    {
+        return $query->where($filter['column'], 'like', $filter['query_1'].'%', $filter['match']);
+    }
+
     protected function betweenDate(array $filter, Builder $query): Builder
     {
         return $query->whereBetween($filter['column'], [

@@ -233,6 +233,26 @@ class FiltersBuilderTest extends TestCase
         self::assertNotTrue($results->contains($this->client3));
     }
 
+    /** @test */
+    public function it_filters_by_string_field_starts_with_value(): void
+    {
+        $results = Client::filter([
+            'filters' => [
+                [
+                    'column' => 'name',
+                    'operator' => 'starts_with',
+                    'query_1' => 'j',
+                    'query_2' => null,
+                ],
+            ],
+        ])->get();
+
+        self::assertCount(2, $results);
+        self::assertTrue($results->contains($this->client1));
+        self::assertTrue($results->contains($this->client2));
+        self::assertNotTrue($results->contains($this->client3));
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Filtering date/datetime fields on model

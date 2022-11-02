@@ -72,6 +72,7 @@ trait Filterable
             'between',
             'not_between',
             'contains',
+            'starts_with',
             'between_date',
             'in',
         ]);
