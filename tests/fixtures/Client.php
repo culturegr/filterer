@@ -15,7 +15,9 @@ class Client extends Model
 
     protected $sortable = ['name', 'country.name', 'orders.items', 'favoriteProducts.price'];
 
-    protected $dates = ['registered_at'];
+    protected $casts = [
+        'registered_at' => 'datetime',
+    ];
 
     public function country()
     {

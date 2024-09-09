@@ -8,7 +8,9 @@ class Order extends Model
 {
     protected $guarded = [];
 
-    protected $dates = ['shipped_at'];
+    protected $casts = [
+        'shipped_at' => 'datetime',
+    ];
 
     public function permissions()
     {
