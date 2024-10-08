@@ -1,5 +1,5 @@
 {
-    "name": "culturegr/filterer",
+    "name": "yppo/filterer",
     "description": "Add filtering, sorting and paging functionality to Eloquent models.",
     "license": "MIT",
     "authors": [
@@ -38,7 +38,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "CultureGr\\Filterer\\FiltererServiceProvider"
+                "CultureGr\\Filterer\\Providers\\FiltererServiceProvider"
             ]
         }
     }

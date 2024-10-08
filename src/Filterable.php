@@ -10,7 +10,6 @@ trait Filterable
 {
     /**
      * Apply filters and sorting to the query, then paginate the results.
-     *
      * @param Builder $query The query builder instance
      * @param array $queryString An array containing filter, sort, and pagination parameters
      * @return Builder The filtered results
@@ -21,8 +20,8 @@ trait Filterable
         $this->validateQueryString($queryString);
 
         return $query
-            ->when(isset($queryString['filters']), fn ($q) => $this->applyFiltersToBuilder($q, $queryString['filters']))
-            ->when(isset($queryString['sorts']), fn ($q) => $this->applySortsToBuilder($q, $queryString['sorts']));
+            ->when(isset($queryString['filters']), fn($q) => $this->applyFiltersToBuilder($q, $queryString['filters']))
+            ->when(isset($queryString['sorts']), fn($q) => $this->applySortsToBuilder($q, $queryString['sorts']));
     }
 
     /**
@@ -36,8 +35,8 @@ trait Filterable
         return $this->scopeFilter($query, $queryString)
             ->when(
                 isset($queryString['limit']),
-                fn ($q) => $q->paginate($queryString['limit']),
-                fn ($q) => $q->paginate($defaultLimit)
+                fn($q) => $q->paginate($queryString['limit']),
+                fn($q) => $q->paginate($defaultLimit)
             );
     }
 
@@ -46,12 +45,12 @@ trait Filterable
         $validator = validator()->make($queryString, [
             // TODO: 'filter_match' => 'sometimes|required|in:and,or',
             'filters' => 'sometimes|required|array',
-            'filters.*.column' => 'required_with:f|in:'.$this->allowedFilterable(),
-            'filters.*.operator' => 'required_with:f.*.column|in:'.$this->allowedOperators(),
+            'filters.*.column' => 'required_with:f.*.column|in:' . $this->allowedFilterables(),
+            'filters.*.operator' => 'required_with:f.*.column|in:' . $this->allowedOperators(),
             'filters.*.query_1' => 'required_with:f.*.column',
             'filters.*.query_2' => 'required_if:f.*.operator,between,not_between',
             'sorts' => 'sometimes|required|array',
-            'sorts.*.column' => 'required_with:f|in:'.$this->allowedSortable(),
+            'sorts.*.column' => 'required_with:f|in:' . $this->allowedSortable(),
             'sorts.*.direction' => 'required_with:f.*.column',
         ]);
 
@@ -62,7 +61,7 @@ trait Filterable
 
     protected function applyFiltersToBuilder(Builder $builder, array $filters): Builder
     {
-        return (new FiltersBuilder($builder))->apply($filters);
+        return (new FiltersBuilder($builder, $this->getCustomFilters()))->apply($filters);
     }
 
     protected function applySortsToBuilder(Builder $builder, array $orders): Builder
@@ -70,14 +69,19 @@ trait Filterable
         return (new SortsBuilder($builder))->apply($orders);
     }
 
-    protected function allowedFilterable(): string
+    protected function allowedFilterables(): string
     {
-        return implode(',', $this->filterable);
+        return implode(',', array_merge($this->getFilterables(), array_keys($this->getCustomFilters())));
+    }
+
+    protected function allowedCustomFilters(): string
+    {
+        return implode(',', array_keys($this->getCustomFilters()));
     }
 
     protected function allowedSortable(): string
     {
-        return implode(',', $this->sortable);
+        return implode(',', $this->getSortables());
     }
 
     protected function allowedOperators(): string
@@ -94,5 +98,20 @@ trait Filterable
             'between_date',
             'in',
         ]);
+    }
+
+    protected function getFilterables(): array
+    {
+        return $this->filterable ?? [];
+    }
+
+    protected function getSortables(): array
+    {
+        return $this->sortable ?? [];
+    }
+
+    protected function getCustomFilters(): array
+    {
+        return $this->customFilters ?? [];
     }
 }

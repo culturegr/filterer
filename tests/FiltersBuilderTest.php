@@ -2,6 +2,7 @@
 
 namespace CultureGr\Filterer\Tests;
 
+use CultureGr\Filterer\Tests\Fixtures\ActiveClientsFilter;
 use CultureGr\Filterer\Tests\Fixtures\Order;
 use CultureGr\Filterer\Tests\Fixtures\Client;
 use CultureGr\Filterer\Tests\Fixtures\Country;
@@ -464,4 +465,48 @@ class FiltersBuilderTest extends TestCase
         self::assertNotTrue($results->contains($this->client2));
         self::assertNotTrue($results->contains($this->client3));
     }
+
+    /** @test */
+    public function it_applies_active_clients_custom_filter(): void
+    {
+        // Active clients considered those who have at least one order
+        // shipped on 2019-06-15 09:30:00 and after
+
+        $activeClients = Client::filter([
+            'filters' => [
+                [
+                    'column' => 'active',
+                    'operator' => 'equal_to',
+                    'query_1' => true
+                ]
+            ]
+        ])->get();
+
+        $inactiveClients = Client::filter([
+            'filters' => [
+                [
+                    'column' => 'active',
+                    'operator' => 'equal_to',
+                    'query_1' => false
+                ]
+            ]
+        ])->get();
+
+        $reflector = new \ReflectionClass(Client::class);
+        $customFiltersProperty = $reflector->getProperty('customFilters');
+        $customFilters = $customFiltersProperty->getValue(new Client());
+
+        $this->assertArrayHasKey('active', $customFilters);
+        $this->assertEquals(ActiveClientsFilter::class, $customFilters['active']);
+
+        $activeClientIds = $activeClients->pluck('id');
+        $this->assertCount(1, $activeClientIds);
+        $this->assertTrue($activeClientIds->contains($this->client1->id));
+
+        $inactiveClientIds = $inactiveClients->pluck('id');
+        $this->assertCount(2, $inactiveClientIds);
+        $this->assertTrue($inactiveClientIds->contains($this->client2->id));
+        $this->assertTrue($inactiveClientIds->contains($this->client3->id));
+    }
+
 }

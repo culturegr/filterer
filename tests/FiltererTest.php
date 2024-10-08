@@ -10,7 +10,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class FiltererTest extends TestCase
 {
     /** @test */
-    public function it_provides_a_filter_scope_to_eloquent_models_using_the_trait(): void
+    public function it_adds_filter_scope_to_models_with_trait(): void
     {
         $client = factory(Client::class)->create();
 
@@ -18,7 +18,7 @@ class FiltererTest extends TestCase
     }
 
     /** @test */
-    public function it_provides_a_filterPaginate_scope_to_eloquent_models_using_the_trait(): void
+    public function it_adds_filterPaginate_scope_to_models_with_trait(): void
     {
         $client = factory(Client::class)->create();
 
@@ -75,7 +75,7 @@ class FiltererTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_custom_builder_instance_if_filter_scope_is_called(): void
+    public function it_returns_builder_for_filter_scope(): void
     {
         factory(Client::class, 10)->create();
 
@@ -100,7 +100,7 @@ class FiltererTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_paginator_instance_if_filterPaginate_scope_is_called(): void
+    public function it_returns_paginator_for_filterPaginate_scope(): void
     {
         factory(Client::class, 10)->create();
 
@@ -110,7 +110,7 @@ class FiltererTest extends TestCase
     }
 
     /** @test */
-    public function filterPaginate_scope_returns_paginated_results_according_to_limit_query_string_parameter(): void
+    public function it_respects_query_string_limit_in_filterPaginate(): void
     {
         factory(Client::class, 10)->create();
 
@@ -122,7 +122,7 @@ class FiltererTest extends TestCase
     }
 
     /** @test */
-    public function filterPaginate_scope_returns_paginated_results_according_to_defaultLimit_parameter_if_limit_query_string_parameter_is_not_set(): void
+    public function it_uses_defaultLimit_when_query_limit_not_set_in_filterPaginate(): void
     {
         factory(Client::class, 10)->create();
         $defaultLimit = 8;
@@ -133,7 +133,7 @@ class FiltererTest extends TestCase
     }
 
     /** @test */
-    public function filterPaginate_scope_returns_paginated_results_by_ten_if_neither_limit_query_string_parameter_nor_defaultLimit_parameter_are_set(): void
+    public function it_defaults_to_ten_items_when_no_limit_specified_in_filterPaginate(): void
     {
         factory(Client::class, 20)->create();
 

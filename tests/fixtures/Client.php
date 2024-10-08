@@ -15,6 +15,10 @@ class Client extends Model
 
     protected $sortable = ['name', 'country.name', 'orders.items', 'favoriteProducts.price'];
 
+    protected $customFilters = [
+        'active' => ActiveClientsFilter::class,
+    ];
+
     protected $casts = [
         'registered_at' => 'datetime',
     ];
