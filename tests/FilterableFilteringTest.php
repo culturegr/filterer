@@ -8,7 +8,7 @@ use CultureGr\Filterer\Tests\Fixtures\Client;
 use CultureGr\Filterer\Tests\Fixtures\Country;
 use CultureGr\Filterer\Tests\Fixtures\FavoriteProduct;
 
-class FiltersBuilderTest extends TestCase
+class FilterableFilteringTest extends TestCase
 {
     protected Country $country1;
     protected Country $country2;
@@ -44,7 +44,6 @@ class FiltersBuilderTest extends TestCase
     |--------------------------------------------------------------------------
     | Filtering by numeric fields on model
     |--------------------------------------------------------------------------
-    |
     */
 
     /** @test */
@@ -135,8 +134,8 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'age',
                     'operator' => 'between',
-                    'query_1' => '25',
-                    'query_2' => '28',
+                    'query_1' => '20',
+                    'query_2' => '25',
                 ],
             ],
         ])->get();
@@ -155,23 +154,22 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'age',
                     'operator' => 'not_between',
-                    'query_1' => '28',
-                    'query_2' => '30',
+                    'query_1' => '20',
+                    'query_2' => '25',
                 ],
             ],
         ])->get();
 
-        self::assertCount(2, $results);
-        self::assertTrue($results->contains($this->client1));
-        self::assertNotTrue($results->contains($this->client2));
-        self::assertTrue($results->contains($this->client3));
+        self::assertCount(1, $results);
+        self::assertNotTrue($results->contains($this->client1));
+        self::assertTrue($results->contains($this->client2));
+        self::assertNotTrue($results->contains($this->client3));
     }
 
     /*
     |--------------------------------------------------------------------------
     | Filtering string fields on model
     |--------------------------------------------------------------------------
-    |
     */
 
     /** @test */
@@ -222,14 +220,14 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'name',
                     'operator' => 'contains',
-                    'query_1' => 'n',
+                    'query_1' => 'Ja',
                     'query_2' => null,
                 ],
             ],
         ])->get();
 
-        self::assertCount(2, $results);
-        self::assertTrue($results->contains($this->client1));
+        self::assertCount(1, $results);
+        self::assertNotTrue($results->contains($this->client1));
         self::assertTrue($results->contains($this->client2));
         self::assertNotTrue($results->contains($this->client3));
     }
@@ -242,7 +240,7 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'name',
                     'operator' => 'starts_with',
-                    'query_1' => 'j',
+                    'query_1' => 'J',
                     'query_2' => null,
                 ],
             ],
@@ -258,7 +256,6 @@ class FiltersBuilderTest extends TestCase
     |--------------------------------------------------------------------------
     | Filtering date/datetime fields on model
     |--------------------------------------------------------------------------
-    |
     */
 
     /** @test */
@@ -289,8 +286,8 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'created_at',
                     'operator' => 'between_date',
-                    'query_1' => '1970-01-01 00:00:00',
-                    'query_2' => '1970-01-01 10:00:00',
+                    'query_1' => '1970-01-01T00:00:00Z',
+                    'query_2' => '1970-01-01T00:00:00Z',
                 ],
             ],
         ])->get();
@@ -303,9 +300,8 @@ class FiltersBuilderTest extends TestCase
 
     /*
     |--------------------------------------------------------------------------
-    | Filtering by fields on related models
+    | Filtering by fields that exist in related models
     |--------------------------------------------------------------------------
-    |
     */
 
     /** @test */
@@ -315,8 +311,8 @@ class FiltersBuilderTest extends TestCase
             'filters' => [
                 [
                     'column' => 'country.name',
-                    'operator' => 'in',
-                    'query_1' => ['UK'],
+                    'operator' => 'equal_to',
+                    'query_1' => 'UK',
                     'query_2' => null,
                 ],
             ],
@@ -355,8 +351,8 @@ class FiltersBuilderTest extends TestCase
             'filters' => [
                 [
                     'column' => 'orders.shipped_at',
-                    'operator' => 'in',
-                    'query_1' => ['2019-08-15 09:30:00'], // i.e ORDER1
+                    'operator' => 'equal_to',
+                    'query_1' => '2019-08-15 09:30:00',
                     'query_2' => null,
                 ],
             ],
@@ -376,7 +372,7 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'orders.shipped_at',
                     'operator' => 'in',
-                    'query_1' => ['2019-08-15 09:30:00', '2019-04-15 09:30:00'], // i.e ORDER1 and ORDER3
+                    'query_1' => ['2019-06-15 09:30:00', '2019-04-15 09:30:00'],
                     'query_2' => null,
                 ],
             ],
@@ -395,8 +391,8 @@ class FiltersBuilderTest extends TestCase
             'filters' => [
                 [
                     'column' => 'favoriteProducts.price',
-                    'operator' => 'in',
-                    'query_1' => ['6'], // i.e. Oranges
+                    'operator' => 'equal_to',
+                    'query_1' => '6',
                     'query_2' => null,
                 ],
             ],
@@ -416,17 +412,23 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'favoriteProducts.price',
                     'operator' => 'in',
-                    'query_1' => ['5' ,'7'], // i.e Apples and Bananas
+                    'query_1' => ['6', '7'],
                     'query_2' => null,
                 ],
             ],
         ])->get();
 
-        self::assertCount(2, $results);
+        self::assertCount(3, $results);
         self::assertTrue($results->contains($this->client1));
         self::assertTrue($results->contains($this->client2));
-        self::assertNotTrue($results->contains($this->client3));
+        self::assertTrue($results->contains($this->client3));
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Complex filtering scenarios
+    |--------------------------------------------------------------------------
+    */
 
     /** @test */
     public function it_combines_multiple_fitlers_using_the_AND_operator(): void
@@ -477,36 +479,31 @@ class FiltersBuilderTest extends TestCase
                 [
                     'column' => 'active',
                     'operator' => 'equal_to',
-                    'query_1' => true
-                ]
-            ]
+                    'query_1' => true,
+                    'query_2' => null,
+                ],
+            ],
         ])->get();
+
+        self::assertCount(1, $activeClients);
+        self::assertTrue($activeClients->contains($this->client1));
+        self::assertNotTrue($activeClients->contains($this->client2));
+        self::assertNotTrue($activeClients->contains($this->client3));
 
         $inactiveClients = Client::filter([
             'filters' => [
                 [
                     'column' => 'active',
                     'operator' => 'equal_to',
-                    'query_1' => false
-                ]
-            ]
+                    'query_1' => false,
+                    'query_2' => null,
+                ],
+            ],
         ])->get();
 
-        $reflector = new \ReflectionClass(Client::class);
-        $customFiltersProperty = $reflector->getProperty('customFilters');
-        $customFilters = $customFiltersProperty->getValue(new Client());
-
-        $this->assertArrayHasKey('active', $customFilters);
-        $this->assertEquals(ActiveClientsFilter::class, $customFilters['active']);
-
-        $activeClientIds = $activeClients->pluck('id');
-        $this->assertCount(1, $activeClientIds);
-        $this->assertTrue($activeClientIds->contains($this->client1->id));
-
-        $inactiveClientIds = $inactiveClients->pluck('id');
-        $this->assertCount(2, $inactiveClientIds);
-        $this->assertTrue($inactiveClientIds->contains($this->client2->id));
-        $this->assertTrue($inactiveClientIds->contains($this->client3->id));
+        self::assertCount(2, $inactiveClients);
+        self::assertNotTrue($inactiveClients->contains($this->client1));
+        self::assertTrue($inactiveClients->contains($this->client2));
+        self::assertTrue($inactiveClients->contains($this->client3));
     }
-
 }

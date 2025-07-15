@@ -7,7 +7,7 @@ use CultureGr\Filterer\Tests\Fixtures\Client;
 use CultureGr\Filterer\Tests\Fixtures\Country;
 use CultureGr\Filterer\Tests\Fixtures\FavoriteProduct;
 
-class SortsBuilderTest extends TestCase
+class FilterableSortingTest extends TestCase
 {
     protected Country $country1;
     protected Country $country2;
@@ -48,15 +48,14 @@ class SortsBuilderTest extends TestCase
         $this->favoriteProduct5 = factory(FavoriteProduct::class)->create(['price' => 90]);
         $this->client1->favoriteProducts()->attach([$this->favoriteProduct1->id, $this->favoriteProduct2->id]);
         $this->client2->favoriteProducts()->attach([$this->favoriteProduct3->id, $this->favoriteProduct4->id]);
-        $this->client3->favoriteProducts()->attach([$this->favoriteProduct2->id, $this->favoriteProduct3->id]);
-        $this->client4->favoriteProducts()->attach([$this->favoriteProduct4->id, $this->favoriteProduct5->id]);
+        $this->client3->favoriteProducts()->attach($this->favoriteProduct2->id);
+        $this->client4->favoriteProducts()->attach($this->favoriteProduct5->id);
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Filtering by numeric fields on model
+    | Basic field sorting
     |--------------------------------------------------------------------------
-    |
     */
 
     /** @test */
@@ -89,6 +88,12 @@ class SortsBuilderTest extends TestCase
         self::assertEquals($results->sortByDesc('name')->pluck('id'), $results->pluck('id'));
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Relational sorting - One-to-Many
+    |--------------------------------------------------------------------------
+    */
+
     /** @test */
     public function it_sorts_by_field_that_exists_in_one_to_many_related_model_in_ascending_order(): void
     {
@@ -118,6 +123,12 @@ class SortsBuilderTest extends TestCase
 
         self::assertEquals($results->sortByDesc(fn ($client) => $client->country->name)->pluck('id'), $results->pluck('id'));
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relational sorting - Many-to-One
+    |--------------------------------------------------------------------------
+    */
 
     /** @test */
     public function it_sorts_by_field_that_exists_in_many_to_one_related_model_in_ascending_order(): void
@@ -159,6 +170,12 @@ class SortsBuilderTest extends TestCase
         ], $results->pluck('id')->all());
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Relational sorting - Many-to-Many
+    |--------------------------------------------------------------------------
+    */
+
     /** @test */
     public function it_sorts_by_field_that_exists_in_many_to_many_related_model_in_ascending_order(): void
     {
@@ -194,10 +211,16 @@ class SortsBuilderTest extends TestCase
         self::assertEquals([
             $this->client4->id,
             $this->client2->id,
-            $this->client3->id,
             $this->client1->id,
+            $this->client3->id,
         ], $results->pluck('id')->all());
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Complex sorting scenarios
+    |--------------------------------------------------------------------------
+    */
 
     /** @test */
     public function it_sorts_by_multiple_fields(): void

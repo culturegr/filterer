@@ -27,17 +27,17 @@ trait Filterable
     /**
      * @param Builder $query The query builder instance
      * @param array $queryString An array containing filter, sort, and pagination parameters
+     * @param int $defaultLimit The default number of items per page
      * @return LengthAwarePaginator The paginated filtered results
      * @throws ValidationException If the query string contains invalid parameters
      */
     public function scopeFilterPaginate(Builder $query, array $queryString, $defaultLimit = 10): LengthAwarePaginator
     {
+        $perPage = $queryString['limit'] ?? $defaultLimit;
+        $page = $queryString['page'] ?? null;
+
         return $this->scopeFilter($query, $queryString)
-            ->when(
-                isset($queryString['limit']),
-                fn($q) => $q->paginate($queryString['limit']),
-                fn($q) => $q->paginate($defaultLimit)
-            );
+            ->paginate($perPage, ['*'], 'page', $page);
     }
 
     protected function validateQueryString(array $queryString): void
@@ -52,6 +52,8 @@ trait Filterable
             'sorts' => 'sometimes|required|array',
             'sorts.*.column' => 'required_with:f|in:' . $this->allowedSortable(),
             'sorts.*.direction' => 'required_with:f.*.column',
+            'limit' => 'sometimes|integer|min:1',
+            'page' => 'sometimes|integer|min:1'
         ]);
 
         if ($validator->fails()) {

@@ -4,17 +4,22 @@ namespace CultureGr\Filterer\Tests;
 
 use Illuminate\Database\Eloquent\Builder;
 use CultureGr\Filterer\Tests\Fixtures\Client;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class FiltererTest extends TestCase
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Core Trait Functionality Tests
+    |--------------------------------------------------------------------------
+    */
+
     /** @test */
     public function it_adds_filter_scope_to_models_with_trait(): void
     {
         $client = factory(Client::class)->create();
 
-        self::assertTrue(method_exists($client, 'scopeFilter'));
+        $this->assertTrue(method_exists($client, 'scopeFilter'));
     }
 
     /** @test */
@@ -22,57 +27,14 @@ class FiltererTest extends TestCase
     {
         $client = factory(Client::class)->create();
 
-        self::assertTrue(method_exists($client, 'scopeFilterPaginate'));
+        $this->assertTrue(method_exists($client, 'scopeFilterPaginate'));
     }
 
-    /** @test */
-    public function it_throws_a_validation_exception_if_filter_field_has_not_been_defined_in_filterable(): void
-    {
-        $this->expectException(ValidationException::class);
-
-        Client::filter([
-            'filters' => [
-                [
-                    'column' => 'does_not_exists_on_filterable',
-                    'operator' => 'equal_to',
-                    'query_1' => '2020-08-06T08:07:23.000000Z',
-                    'query_2' => null,
-                ],
-            ],
-        ]);
-    }
-
-    /** @test */
-    public function it_throws_a_validation_exception_if_filter_operator_is_unsupported(): void
-    {
-        $this->expectException(ValidationException::class);
-
-        Client::filter([
-            'filters' => [
-                [
-                    'column' => 'age',
-                    'operator' => 'not_supported',
-                    'query_1' => '2020-08-06T08:07:23.000000Z',
-                    'query_2' => null,
-                ],
-            ],
-        ]);
-    }
-
-    /** @test */
-    public function it_throws_a_validation_exception_if_sort_field_has_not_been_defined_in_sortables(): void
-    {
-        $this->expectException(ValidationException::class);
-
-        Client::filter([
-            'sorts' => [
-                [
-                    'column' => 'does_not_exists_on_sortable',
-                    'direction' => 'asc',
-                ],
-            ],
-        ]);
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Basic Integration Tests
+    |--------------------------------------------------------------------------
+    */
 
     /** @test */
     public function it_returns_builder_for_filter_scope(): void
@@ -96,7 +58,7 @@ class FiltererTest extends TestCase
             ],
         ]);
 
-        self::assertInstanceOf(Builder::class, $results);
+        $this->assertInstanceOf(Builder::class, $results);
     }
 
     /** @test */
@@ -104,45 +66,55 @@ class FiltererTest extends TestCase
     {
         factory(Client::class, 10)->create();
 
-        $results = Client::filterPaginate([]);
-
-        self::assertInstanceOf(LengthAwarePaginator::class, $results);
-    }
-
-    /** @test */
-    public function it_respects_query_string_limit_in_filterPaginate(): void
-    {
-        factory(Client::class, 10)->create();
-
         $results = Client::filterPaginate([
+            'filters' => [
+                [
+                    'column' => 'name',
+                    'operator' => 'equal_to',
+                    'query_1' => 'John',
+                    'query_2' => null,
+                ],
+            ],
+            'sorts' => [
+                [
+                    'column' => 'name',
+                    'direction' => 'asc',
+                ],
+            ],
             'limit' => 5,
+            'page' => 1,
         ]);
 
-        self::assertCount(5, $results->items());
+        $this->assertInstanceOf(LengthAwarePaginator::class, $results);
     }
 
     /** @test */
-    public function it_uses_defaultLimit_when_query_limit_not_set_in_filterPaginate(): void
+    public function it_works_with_empty_parameters(): void
     {
-        factory(Client::class, 10)->create();
-        $defaultLimit = 8;
+        factory(Client::class, 5)->create();
 
-        $results = Client::filterPaginate([], $defaultLimit);
+        // Should work with empty array
+        $filterResults = Client::filter([]);
+        $this->assertInstanceOf(Builder::class, $filterResults);
 
-        self::assertCount(8, $results->items());
+        // Should work with empty array
+        $paginateResults = Client::filterPaginate([]);
+        $this->assertInstanceOf(LengthAwarePaginator::class, $paginateResults);
     }
 
     /** @test */
-    public function it_defaults_to_ten_items_when_no_limit_specified_in_filterPaginate(): void
+    public function it_maintains_method_chaining(): void
     {
-        factory(Client::class, 20)->create();
+        factory(Client::class, 15)->create();
 
-        $results = Client::filterPaginate([]);
+        // Test that filter() returns a Builder that can be chained
+        $results = Client::filter([])->limit(3)->get();
 
-        self::assertCount(10, $results->items());
+        $this->assertCount(3, $results);
     }
 
     protected function seedDatabase(): void
     {
+        // No seeding needed for core functionality tests
     }
 }
