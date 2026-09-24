@@ -1,5 +1,5 @@
 {
-    "name": "yppo/filterer",
+    "name": "culturegr/filterer",
     "description": "Add filtering, sorting and paging functionality to Eloquent models.",
     "license": "MIT",
     "authors": [
