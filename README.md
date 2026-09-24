@@ -393,6 +393,116 @@ $stored = ['page' => 2, 'limit' => 20, 'filters' => [...]];
 - Set reasonable min/max limits for pagination
 - Handle edge cases (page > total pages, etc.)
 
+## Helper Methods
+
+The Filterable trait provides additional helper methods for common use cases:
+
+### Simple Pagination
+
+For large datasets where you don't need total count information, use `filterSimplePaginate()` for better performance:
+
+```php
+// Simple pagination (no total count, more efficient)
+$clients = Client::filterSimplePaginate([
+    'filters' => [...],
+    'sorts' => [...],
+    'limit' => 20,
+    'page' => 1,
+]);
+
+// Returns Illuminate\Pagination\Paginator (simple paginator)
+```
+
+### Count Only
+
+To get the count of filtered results without retrieving the data:
+
+```php
+// Get count of filtered results
+$count = Client::filterCount([
+    'filters' => [
+        [
+            'column' => 'status',
+            'operator' => 'equal_to',
+            'query_1' => 'active',
+        ],
+    ],
+    // Note: sorts are ignored for counting (performance optimization)
+]);
+
+// Returns integer count
+```
+
+### Method Comparison
+
+| Method | Returns | Use Case | Performance |
+|--------|---------|----------|-------------|
+| `filter()` | Builder | Custom queries, chaining | Fast |
+| `filterPaginate()` | LengthAwarePaginator | Full pagination with totals | Moderate |
+| `filterSimplePaginate()` | Paginator | Large datasets, no totals needed | Fast |
+| `filterCount()` | Integer | Count only, no data | Very Fast |
+
+## Configuration
+
+You can customize the Filterer behavior by publishing and modifying the configuration file:
+
+```bash
+php artisan vendor:publish --tag=filterer-config
+```
+
+This will create a `config/filterer.php` file with the following options:
+
+### Pagination Settings
+
+```php
+'pagination' => [
+    'default_limit' => env('FILTERER_DEFAULT_LIMIT', 10),        // Default items per page
+    'max_limit' => env('FILTERER_MAX_LIMIT'),                    // Maximum items per page (null = no limit)
+    'page_name' => env('FILTERER_PAGE_NAME', 'page'),            // Query parameter name for pagination
+],
+```
+
+When `max_limit` is set, `filterPaginate()` and `filterSimplePaginate()` silently cap larger limits, while `filter()` rejects them with a validation error.
+
+### Environment Variables
+
+You can also configure common settings via environment variables in your `.env` file:
+
+```env
+# Pagination settings
+FILTERER_DEFAULT_LIMIT=15
+FILTERER_MAX_LIMIT=50
+FILTERER_PAGE_NAME=page
+```
+
+### Validation Settings
+
+```php
+'validation' => [
+    'error_messages' => [         // Custom validation error messages (empty = use app translations)
+        'limit.max' => 'The limit may not be greater than :max.',
+        'filters.*.column.in' => 'The selected filter column is not allowed.',
+        // ... other custom messages
+    ],
+],
+```
+
+By default no custom messages are set, so your application's validation translations are used.
+
+### Security Settings
+
+```php
+'security' => [
+    'allowed_operators' => [      // Restrict available operators globally
+        'equal_to',
+        'contains',
+        // ... only allow specific operators (empty = allow all)
+    ],
+],
+```
+
+This list can only restrict the built-in operators; unsupported names are ignored.
+
 ## Combining filtering, sorting and paging
 
 Filtering, sorting and paging functionality can be combined using the `filterPaginate` method provided by `Filterable` trait and passing as an argument an array that contains any of the `filters`, `sorts`, `limit`, and `page` properties:

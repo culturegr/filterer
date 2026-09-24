@@ -8,11 +8,12 @@ The test suite is organized following the **Single Responsibility Principle**, w
 
 ```
 tests/
-├── FiltererTest.php              # Core trait functionality & basic integration
+├── FiltererTest.php              # Core trait functionality & helper methods
 ├── FilterablePaginationTest.php  # All pagination-related tests
 ├── FilterableValidationTest.php  # All validation-related tests
 ├── FilterableFilteringTest.php   # Complex filtering scenarios
 ├── FilterableSortingTest.php     # Complex sorting scenarios
+├── FilterableConfigurationTest.php # Configuration integration tests
 ├── TestCase.php                  # Base test class
 ├── fixtures/                     # Test fixtures and models
 └── database/                     # Test database setup
@@ -65,6 +66,16 @@ tests/
 - Relational sorting (all relationship types)
 - Multi-field sorting with different directions
 - Complex sorting combinations
+
+### FilterableConfigurationTest.php (Configuration)
+**Purpose**: Configuration integration testing
+**Test Count**: 15 tests
+**Responsibilities**:
+- Configuration default values
+- Maximum limit enforcement
+- Custom page name handling
+- Operator restrictions
+- Backward-compatible defaults (no max limit, app translations)
 
 ## Test Patterns and Conventions
 
@@ -190,11 +201,12 @@ class FilterableNewFeatureTest extends TestCase
 
 | Test File | Tests | Assertions | Coverage Area |
 |-----------|-------|------------|---------------|
-| FiltererTest.php | 5 | ~15 | Core trait functionality |
+| FiltererTest.php | 12 | ~25 | Core trait functionality & helper methods |
 | FilterablePaginationTest.php | 16 | ~45 | Pagination scenarios |
 | FilterableValidationTest.php | 17 | ~35 | Validation logic |
 | FilterableFilteringTest.php | 20 | ~40 | Filtering scenarios |
 | FilterableSortingTest.php | 9 | ~15 | Sorting scenarios |
-| **Total** | **67** | **~150** | **Complete coverage** |
+| FilterableConfigurationTest.php | 15 | ~30 | Configuration integration |
+| **Total** | **89** | **~180** | **Complete coverage** |
 
 This modular structure ensures comprehensive test coverage while maintaining clarity, maintainability, and ease of development.

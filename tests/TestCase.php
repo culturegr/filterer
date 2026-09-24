@@ -2,6 +2,7 @@
 
 namespace CultureGr\Filterer\Tests;
 
+use CultureGr\Filterer\Providers\FiltererServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
@@ -13,6 +14,11 @@ abstract class TestCase extends Orchestra
         $this->loadMigrationsFrom(__DIR__.'/database/migrations');
         $this->withFactories(__DIR__.'/database/factories');
         $this->seedDatabase();
+    }
+
+    protected function getPackageProviders($app): array
+    {
+        return [FiltererServiceProvider::class];
     }
 
     protected function getEnvironmentSetUp($app): void

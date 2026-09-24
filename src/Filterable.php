@@ -4,6 +4,7 @@ namespace CultureGr\Filterer;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Validation\ValidationException;
 
 trait Filterable
@@ -27,22 +28,74 @@ trait Filterable
     /**
      * @param Builder $query The query builder instance
      * @param array $queryString An array containing filter, sort, and pagination parameters
-     * @param int $defaultLimit The default number of items per page
+     * @param int|null $defaultLimit The default number of items per page (null to use config)
      * @return LengthAwarePaginator The paginated filtered results
      * @throws ValidationException If the query string contains invalid parameters
      */
-    public function scopeFilterPaginate(Builder $query, array $queryString, $defaultLimit = 10): LengthAwarePaginator
+    public function scopeFilterPaginate(Builder $query, array $queryString, $defaultLimit = null): LengthAwarePaginator
     {
-        $perPage = $queryString['limit'] ?? $defaultLimit;
+        return $this->paginateFiltered($query, $queryString, $defaultLimit, 'paginate');
+    }
+
+    /**
+     * Apply filters and sorting to the query, then simple paginate the results.
+     * Simple pagination is more efficient for large datasets as it doesn't count total records.
+     *
+     * @param Builder $query The query builder instance
+     * @param array $queryString An array containing filter, sort, and pagination parameters
+     * @param int|null $defaultLimit The default number of items per page (null to use config)
+     * @return Paginator The simple paginated filtered results
+     * @throws ValidationException If the query string contains invalid parameters
+     */
+    public function scopeFilterSimplePaginate(Builder $query, array $queryString, $defaultLimit = null): Paginator
+    {
+        return $this->paginateFiltered($query, $queryString, $defaultLimit, 'simplePaginate');
+    }
+
+    /**
+     * Apply filters to the query and return the count of matching records.
+     * Useful for getting totals without retrieving the actual data.
+     *
+     * @param Builder $query The query builder instance
+     * @param array $queryString An array containing filter parameters (sorts are ignored for counting)
+     * @return int The count of filtered results
+     * @throws ValidationException If the query string contains invalid parameters
+     */
+    public function scopeFilterCount(Builder $query, array $queryString): int
+    {
+        // For counting, we only apply filters, not sorts (sorts don't affect count)
+        $filtersOnly = array_intersect_key($queryString, array_flip(['filters']));
+
+        return $this->scopeFilter($query, $filtersOnly)->count();
+    }
+
+    /**
+     * @param string $method Either 'paginate' or 'simplePaginate'
+     * @throws ValidationException If the query string contains invalid parameters
+     */
+    protected function paginateFiltered(Builder $query, array $queryString, $defaultLimit, string $method): LengthAwarePaginator|Paginator
+    {
+        $maxLimit = config('filterer.pagination.max_limit');
+
+        // Cap numeric limits only; non-numeric values must still fail validation
+        if ($maxLimit && isset($queryString['limit']) && is_numeric($queryString['limit']) && $queryString['limit'] > $maxLimit) {
+            $queryString['limit'] = (int) $maxLimit;
+        }
+
+        $perPage = $queryString['limit'] ?? $defaultLimit ?? config('filterer.pagination.default_limit', 10);
         $page = $queryString['page'] ?? null;
+        $pageName = config('filterer.pagination.page_name', 'page');
 
         return $this->scopeFilter($query, $queryString)
-            ->paginate($perPage, ['*'], 'page', $page);
+            ->{$method}($perPage, ['*'], $pageName, $page);
     }
 
     protected function validateQueryString(array $queryString): void
     {
-        $validator = validator()->make($queryString, [
+        $maxLimit = config('filterer.pagination.max_limit');
+        $customMessages = config('filterer.validation.error_messages', []);
+
+        $rules = [
             // TODO: 'filter_match' => 'sometimes|required|in:and,or',
             'filters' => 'sometimes|required|array',
             'filters.*.column' => 'required_with:f.*.column|in:' . $this->allowedFilterables(),
@@ -52,9 +105,11 @@ trait Filterable
             'sorts' => 'sometimes|required|array',
             'sorts.*.column' => 'required_with:f|in:' . $this->allowedSortable(),
             'sorts.*.direction' => 'required_with:f.*.column',
-            'limit' => 'sometimes|integer|min:1',
+            'limit' => 'sometimes|integer|min:1' . ($maxLimit ? "|max:$maxLimit" : ''),
             'page' => 'sometimes|integer|min:1'
-        ]);
+        ];
+
+        $validator = validator()->make($queryString, $rules, $customMessages);
 
         if ($validator->fails()) {
             throw new ValidationException($validator);
@@ -88,7 +143,7 @@ trait Filterable
 
     protected function allowedOperators(): string
     {
-        return implode(',', [
+        $defaultOperators = [
             'equal_to',
             'not_equal_to',
             'less_than',
@@ -99,7 +154,16 @@ trait Filterable
             'starts_with',
             'between_date',
             'in',
-        ]);
+        ];
+
+        $configOperators = config('filterer.security.allowed_operators', []);
+
+        // Config can only restrict the supported operators, never add new ones
+        $operators = empty($configOperators)
+            ? $defaultOperators
+            : array_intersect($defaultOperators, $configOperators);
+
+        return implode(',', $operators);
     }
 
     protected function getFilterables(): array
